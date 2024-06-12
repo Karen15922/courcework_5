@@ -1,0 +1,14 @@
+[tool.poetry]
+name = "courcework-5"
+version = "0.1.0"
+description = ""
+authors = ["Карен <karen.karakeyan@yandex.ru>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
