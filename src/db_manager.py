@@ -1,7 +1,6 @@
-import requests
 import psycopg2
 
-def create_database(dbname, user, password, host, port):
+def create_database(dbname, user, password, host, port, data):
     conn = psycopg2.connect(
         dbname=dbname,
         user=user,
@@ -11,6 +10,10 @@ def create_database(dbname, user, password, host, port):
     )
     conn.autocommit = True
     cur = conn.cursor()
+    
+    vacancies = data.get('vacancies')
+    companies = data.get('companies')
+
 
     try:
           # Создание таблиц employers и vacancies
@@ -30,20 +33,29 @@ def create_database(dbname, user, password, host, port):
                 FOREIGN KEY (employer_id) REFERENCES employers (id) ON DELETE CASCADE
             )
         """)
+        for company in companies:
+            cur.execute("INSERT INTO employers VALUES(%s, %s);", company)
+        conn.commit()
+
+        for vacancy in vacancies:
+            cur.execute("INSERT INTO vacancies VALUES(%s, %s, %s, %s, %s);", vacancy)
+        conn.commit()
+
     except psycopg2.Error as e:
         print(f"Ошибка при создании базы данных и таблиц: {e}")
     finally:
         cur.close()
         conn.close()
 
+
 class DBManager:
     def __init__(self, dbname, user, password, host, port):
         self.conn = psycopg2.connect(
-        dbname='postgres',
-        user='postgres',
-        password='6276703zx',
-        host= '127.0.0.1',
-        port= '5432'
+        dbname=dbname,
+        user=user,
+        password=password,
+        host= host,
+        port= port
 )
         self.cur = self.conn.cursor()
 
