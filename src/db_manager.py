@@ -1,62 +1,23 @@
 import psycopg2
-
-def create_database(dbname, user, password, host, port, data):
-    conn = psycopg2.connect(
-        dbname=dbname,
-        user=user,
-        password=password,
-        host=host,
-        port=port
-    )
-    conn.autocommit = True
-    cur = conn.cursor()
-    
-    vacancies = data.get('vacancies')
-    companies = data.get('companies')
-
-
-    try:
-          # Создание таблиц employers и vacancies
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS employers (
-                id SERIAL PRIMARY KEY,
-                name VARCHAR(255)
-            )
-        """)
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS vacancies (
-                id SERIAL PRIMARY KEY,
-                employer_id INTEGER,
-                title VARCHAR(255),
-                salary VARCHAR(50),
-                url TEXT,
-                FOREIGN KEY (employer_id) REFERENCES employers (id) ON DELETE CASCADE
-            )
-        """)
-        for company in companies:
-            cur.execute("INSERT INTO employers VALUES(%s, %s);", company)
-        conn.commit()
-
-        for vacancy in vacancies:
-            cur.execute("INSERT INTO vacancies VALUES(%s, %s, %s, %s, %s);", vacancy)
-        conn.commit()
-
-    except psycopg2.Error as e:
-        print(f"Ошибка при создании базы данных и таблиц: {e}")
-    finally:
-        cur.close()
-        conn.close()
-
-
 class DBManager:
-    def __init__(self, dbname, user, password, host, port):
+    def __init__(self, *args):
+        self.dbname = None
+        self.user = None
+        self.password = None
+        self.host = None
+        self.port = None
+        self.connection_details = [self.dbname, self.user, self.password, self.host, self.port]
+
+        for num, value in enumerate(args):
+            self.connection_details[num] = value
+            
         self.conn = psycopg2.connect(
-        dbname=dbname,
-        user=user,
-        password=password,
-        host= host,
-        port= port
-)
+            dbname = self.dbname,
+            name = self.user,
+            password = self.password, 
+            host = self.host,
+            port = self.port
+        )
         self.cur = self.conn.cursor()
 
     def get_companies_and_vacancies_count(self):

@@ -1,5 +1,5 @@
 import requests
-import os 
+import psycopg2
 
 def get_vacancies():
     url = 'https://api.hh.ru/'
@@ -32,6 +32,60 @@ def get_vacancies():
             vacancies.append([_id, com_id, name, salary, url_])
     return {'companies': companies, 'vacancies': vacancies}
 
+def connection_details():
+    dbname = input("Введите название базы данных: ")  
+    user = input("Введите пользователя: ")
+    password = input("Введите пароль: ")
+    host = input("Введите хост: ")
+    port = input("Введите порт: ")
+    return [dbname, user, password, host, port]
 
 
+def create_table_and_fill_it(dbname, user, password, host, port, data):
+    conn = psycopg2.connect(
+        dbname=dbname,
+        user=user,
+        password=password,
+        host=host,
+        port=port
+    )
+    conn.autocommit = True
+    cur = conn.cursor()
+    
+    vacancies = data.get('vacancies')
+    companies = data.get('companies')
 
+
+    try:
+          # Создание таблиц employers и vacancies
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS employers (
+                id SERIAL PRIMARY KEY,
+                name VARCHAR(255)
+            )
+        """)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS vacancies (
+                id SERIAL PRIMARY KEY,
+                employer_id INTEGER,
+                title VARCHAR(255),
+                salary VARCHAR(50),
+                url TEXT,
+                FOREIGN KEY (employer_id) REFERENCES employers (id) ON DELETE CASCADE
+            )
+        """)
+        cur.execute("TRUNCATE TABLE employers CASCADE;")
+        for company in companies:
+            cur.execute("INSERT INTO employers VALUES(%s, %s);", company)
+        conn.commit()
+
+        cur.execute("TRUNCATE TABLE vacancies CASCADE;")
+        for vacancy in vacancies:
+            cur.execute("INSERT INTO vacancies VALUES(%s, %s, %s, %s, %s);", vacancy)
+        conn.commit()
+
+    except psycopg2.Error as e:
+        print(f"Ошибка при создании базы данных и таблиц: {e}")
+    finally:
+        cur.close()
+        conn.close()

@@ -1,5 +1,6 @@
-from src.db_manager import create_database, DBManager
-from src.utils import get_vacancies
+from src.db_manager import  DBManager
+from src.utils import  connection_details, create_table_and_fill_it, get_vacancies
+
 dbname='postgres'
 user='postgres'
 password='6276703zx'
@@ -7,10 +8,8 @@ host='localhost'
 port='5432'
 data = get_vacancies()
 
-create_database(dbname, user, password, host, port, data)
+connection_details = connection_details()
 
-db_manager = DBManager(dbname, user, password, host, port)
+create_table_and_fill_it(dbname, user, password, host, port, data)
 
-
-print(data.get('companies'))
-
+db_manager = DBManager(connection_details)
