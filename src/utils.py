@@ -1,4 +1,5 @@
-import requests
+import requests, os, click
+
 import psycopg2
 
 def get_vacancies():
@@ -25,9 +26,9 @@ def get_vacancies():
             money = vacancy.get('salary')
             url_ = vacancy.get('url')
             if money.get('from') != None:
-                salary = money.get('from')
+                salary = int(money.get('from'))
             else:
-                salary = money.get('to')       
+                salary = int(money.get('to'))
         
             vacancies.append([_id, com_id, name, salary, url_])
     return {'companies': companies, 'vacancies': vacancies}
@@ -37,8 +38,8 @@ def connection_details():
     user = input("Введите пользователя: ")
     password = input("Введите пароль: ")
     host = input("Введите хост: ")
-    port = input("Введите порт: ")
-    return [dbname, user, password, host, port]
+    port = int(input("Введите порт: "))
+    return {'dbname':dbname, 'user':user, 'password':password, 'host':host, 'port':port}
 
 
 def create_table_and_fill_it(dbname, user, password, host, port, data):
@@ -60,18 +61,18 @@ def create_table_and_fill_it(dbname, user, password, host, port, data):
           # Создание таблиц employers и vacancies
         cur.execute("""
             CREATE TABLE IF NOT EXISTS employers (
-                id SERIAL PRIMARY KEY,
+                id INTEGER PRIMARY KEY NOT NULL,
                 name VARCHAR(255)
             )
         """)
         cur.execute("""
             CREATE TABLE IF NOT EXISTS vacancies (
-                id SERIAL PRIMARY KEY,
+                vacancy_id INTEGER PRIMARY KEY NOT NULL,
                 employer_id INTEGER,
                 title VARCHAR(255),
-                salary VARCHAR(50),
+                salary INTEGER,
                 url TEXT,
-                FOREIGN KEY (employer_id) REFERENCES employers (id) ON DELETE CASCADE
+                FOREIGN KEY (employer_id) REFERENCES employers(id)
             )
         """)
         cur.execute("TRUNCATE TABLE employers CASCADE;")
@@ -89,3 +90,39 @@ def create_table_and_fill_it(dbname, user, password, host, port, data):
     finally:
         cur.close()
         conn.close()
+        
+def default():
+    print('unknown_input')
+
+
+def what_do_you_want(db_manager):
+    actions = [
+            '1. Вывести список компаний и количество вакансий',
+            '2. Вывести все вакансии',
+            '3. Вывести среднюю зарплату',
+            '4. Вывести вакансии с зарплатой выше средней',
+            '5. Вывести вакансии по поисковому запросу',
+            '6. Выход'
+            ]
+    commands = {
+            '1': db_manager.get_companies_and_vacancies_count,
+            '2': db_manager.get_all_vacancies,
+            '3': db_manager.get_avg_salary,
+            '4': db_manager.get_vacancies_with_higher_salary,
+            '5': db_manager.get_vacancies_with_keyword,
+            '6': exit}
+
+
+    while True:
+        try:
+            os.system('clear')
+            print('Доступны следующие действия:')
+            for action in actions:
+                print(action)
+            user_select = input('выбери что-нибудь\n')
+            commands.get(user_select, default)()
+            click.pause()
+
+        except ValueError:
+            print('Можно только цмфры')
+
