@@ -1,8 +1,20 @@
-from db_manager import create_database
-dbname='postgres'
-user='postgres'
-password='6276703zx'
-host='localhost'
-port='5432'
+from src.db_manager import  DBManager
+from src.utils import  connection_details, create_table_and_fill_it, get_vacancies, what_do_you_want
 
-create_database(dbname, user, password, host, port)
+
+connection_details = connection_details()
+connection_details['data'] = get_vacancies()
+
+
+create_table_and_fill_it(**connection_details)
+
+db_manager = DBManager(connection_details)
+
+
+
+db_manager = DBManager(connection_details)
+
+what_do_you_want(db_manager)
+
+
+
